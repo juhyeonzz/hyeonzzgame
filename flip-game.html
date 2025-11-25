@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flip Card Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Baloo 2', cursive; }
+  body { background:#fef7f0; color:#333; scroll-behavior:smooth; display:flex; flex-direction:column; align-items:center; }
+  header { position:fixed; top:0; left:0; width:100%; background:#ff9cb5; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+  header h1 { color:white; font-size:1.8rem; }
+  nav a { color:white; margin-left:20px; text-decoration:none; font-weight:bold; transition:0.3s; }
+  nav a:hover { color:#fff0e5; }
+  main { margin-top:90px; width:100%; display:flex; flex-direction:column; align-items:center; padding:20px; }
+  h2 { font-size:2.5rem; margin-bottom:20px; color:#FF9CB5; text-align:center; }
+  .controls { margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  #gameArea { display:grid; grid-template-columns:repeat(6, 100px); grid-template-rows:repeat(4, 140px); gap:10px; justify-content:center; }
+  .card { background-color:#444; border-radius:8px; cursor:pointer; perspective:1000px; position:relative; width:100px; height:140px; transition:0.2s; }
+  .card-inner { position:relative; width:100%; height:100%; transition:transform 0.6s; transform-style:preserve-3d; }
+  .card.flipped .card-inner { transform:rotateY(180deg); }
+  .card-front, .card-back { position:absolute; width:100%; height:100%; border-radius:8px; backface-visibility:hidden; display:flex; justify-content:center; align-items:center; font-size:20px; overflow:hidden; text-align:center; padding:5px; }
+  .card-front { background-color:#444; color:white; font-size:24px; }
+  .card-back { transform:rotateY(180deg); background-color:#fff; font-size:20px; color:#333; }
+  .card-back img { width:100%; height:100%; object-fit:cover; border-radius:8px; }
+  .highlight { box-shadow:0 0 15px 5px #ff6f61; animation: glow 0.5s ease-in-out infinite alternate; }
+  @keyframes glow { 0% { box-shadow:0 0 15px 5px #ff6f61; } 100% { box-shadow:0 0 25px 10px #ff9cb5; } }
+
+  input, button, textarea { padding:10px 20px; border-radius:8px; border:2px solid #ff6f61; font-weight:bold; }
+  button { background:#ff6f61; color:white; cursor:pointer; transition:0.3s; }
+  button:hover { background:#ff3b2f; }
+  textarea { width:300px; height:150px; resize:none; }
+  footer { background:#ff9cb5; color:white; text-align:center; padding:20px; margin-top:40px; }
+  @media (max-width:700px) { #gameArea { grid-template-columns:repeat(4,80px); grid-template-rows:repeat(6,120px);} .card { width:80px; height:120px; } }
+
+  /* Winner Dialog */
+  #winnerDialog {
+    position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0);
+    background:white; border:3px solid #ff9cb5; border-radius:15px; padding:30px 50px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.2); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; z-index:2000; transition:transform 0.3s ease-out;
+  }
+  #winnerDialog.show { transform:translate(-50%,-50%) scale(1); }
+  #winnerDialog h3 { color:#ff6f61; margin-bottom:20px; font-size:1.8rem; }
+  #winnerDialog button { margin-top:10px; padding:8px 20px; font-size:16px; }
+
+  #overlay {
+    position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); display:none; z-index:1500;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Hyeonzz</h1>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="index.html#about">About & Contact</a>
+    <a href="index.html#portfolio">Games</a>
+    <a href="index.html#howtoplay">How to Play</a>
+  </nav>
+</header>
+
+<main>
+  <h2>Giveaway Flip Spinner</h2>
+
+  <div class="controls">
+    <input type="file" id="winnerInput" accept="image/*">
+    <textarea id="namesInput" placeholder="Enter 24 names, one per line"></textarea>
+    <button id="startBtn">Start Game</button>
+    <button id="revealBtn">Reveal Winner</button>
+    <button id="restartBtn">Restart</button>
+  </div>
+
+  <div id="gameArea"></div>
+</main>
+
+<div id="overlay"></div>
+<div id="winnerDialog">
+  <h3 id="winnerName">🎉 Winner!</h3>
+  <button onclick="closeDialog()">Close</button>
+</div>
+
+<footer>
+  &copy; 2025 [juhyeonzz. All Rights Reserved.
+</footer>
+
+<script>
+const winnerInput = document.getElementById('winnerInput');
+const namesInput = document.getElementById('namesInput');
+const startBtn = document.getElementById('startBtn');
+const revealBtn = document.getElementById('revealBtn');
+const restartBtn = document.getElementById('restartBtn');
+const gameArea = document.getElementById('gameArea');
+
+const winnerDialog = document.getElementById('winnerDialog');
+const winnerName = document.getElementById('winnerName');
+const overlay = document.getElementById('overlay');
+
+let winnerImage, winnerPosition, cards=[], names=[];
+
+winnerInput.addEventListener('change', e => {
+  if(e.target.files.length>0) winnerImage = e.target.files[0];
+});
+
+function createGame() {
+  if(!winnerImage) { alert("Please upload winner image!"); return; }
+
+  const rawNames = namesInput.value.split(/\n/).map(n=>n.trim()).filter(n=>n);
+  if(rawNames.length !== 24) { 
+    alert(`Please enter exactly 24 names! You entered ${rawNames.length}.`); 
+    return; 
+  }
+  names = rawNames;
+
+  gameArea.innerHTML = ""; cards=[]; winnerPosition = Math.floor(Math.random() * 24);
+
+  for(let i=0;i<24;i++){
+    const card = document.createElement('div'); card.className='card';
+    const inner = document.createElement('div'); inner.className='card-inner';
+    const front = document.createElement('div'); front.className='card-front'; front.textContent='❓';
+    const back = document.createElement('div'); back.className='card-back';
+
+    if(i===winnerPosition){
+      const img = document.createElement('img'); img.src = URL.createObjectURL(winnerImage); back.appendChild(img);
+    } else {
+      back.textContent = names[i];
+    }
+
+    inner.appendChild(front); inner.appendChild(back); card.appendChild(inner);
+
+    card.addEventListener('click', () => {
+      card.style.pointerEvents='none';
+      startChoosingAnimation(i);
+    });
+
+    gameArea.appendChild(card); cards.push(card);
+  }
+
+  namesInput.value="";
+}
+
+startBtn.addEventListener('click', createGame);
+restartBtn.addEventListener('click', () => {
+  if(!winnerImage) { alert("Please upload winner image!"); return; }
+  createGame();
+});
+
+revealBtn.addEventListener('click', () => {
+  if(cards.length===0) return;
+  startChoosingAnimation(winnerPosition);
+});
+
+function startChoosingAnimation(finalIndex){
+  let count=0;
+  const maxFlips=15;
+  const interval = setInterval(()=>{
+    const randomIndex = Math.floor(Math.random()*cards.length);
+    cards[randomIndex].classList.toggle('flipped');
+    count++;
+    if(count>=maxFlips){
+      clearInterval(interval);
+      cards.forEach((c,i)=> {
+        if(i !== winnerPosition) c.classList.remove('flipped');
+      });
+      // Highlight winner card
+      cards[winnerPosition].classList.add('flipped','highlight');
+      setTimeout(()=> showWinner(names[winnerPosition]), 500);
+    }
+  },100);
+}
+
+function showWinner(name){
+  winnerName.textContent = `🎉 The winner is: ${name}!`;
+  overlay.style.display='block';
+  winnerDialog.classList.add('show');
+}
+
+function closeDialog(){
+  overlay.style.display='none';
+  winnerDialog.classList.remove('show');
+  // Remove highlight from winner card
+  if(cards[winnerPosition]) cards[winnerPosition].classList.remove('highlight');
+}
+</script>
+
+</body>
+</html>

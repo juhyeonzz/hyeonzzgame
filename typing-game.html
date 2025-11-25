@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Baloo 2', cursive; }
+  body { background:#fef7f0; color:#333; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
+  header { position:fixed; top:0; left:0; width:100%; background:#ff9cb5; padding:15px 30px; display:flex; justify-content:space-between; align-items:center; z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1);}
+  header h1 { color:white; font-size:1.8rem; }
+  nav a { color:white; margin-left:20px; text-decoration:none; font-weight:bold; transition:0.3s; }
+  nav a:hover { color:#fff0e5; }
+  main { margin-top:90px; width:100%; max-width:700px; padding:20px; text-align:center; }
+  h2 { font-size:2.5rem; margin-bottom:20px; color:#FF9CB5; }
+  textarea { width:100%; padding:10px; border-radius:8px; border:2px solid #ff6f61; font-size:16px; margin-bottom:10px; resize:none; }
+  button { padding:10px 20px; border-radius:8px; border:none; background:#ff6f61; color:white; font-weight:bold; cursor:pointer; margin:5px; transition:0.3s; }
+  button:hover { background:#ff3b2f; }
+  #textToType { background:#fff0f5; }
+  #typedText { background:#fff; }
+  #result { margin-top:15px; font-size:1.2rem; color:#ff6f61; font-weight:bold; white-space:pre-wrap; }
+  #timer { margin-top:10px; font-size:1.2rem; font-weight:bold; color:#ff3b2f; }
+  footer { background:#ff9cb5; color:white; text-align:center; padding:20px; margin-top:40px; width:100%; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Hyeonzz</h1>
+  <nav>
+     <a href="#home">Home</a>
+    <a href="index.html#about">About & Contact</a>
+    <a href="index.html#portfolio">Games</a>
+    <a href="index.html#howtoplay">How to Play</a>
+  </nav>
+</header>
+
+<main>
+  <h2>Typing Game</h2>
+
+  <textarea id="textToType" placeholder="Enter the text for typing game (multi-line supported)" rows="6"></textarea>
+  <button id="startBtn">Start Typing Game</button>
+
+  <div id="gameArea" style="display:none; margin-top:20px;">
+    <p><strong>Type the text below:</strong></p>
+    <div id="displayText" style="background:#fff0f5; padding:10px; border-radius:8px; white-space:pre-wrap;"></div>
+    <textarea id="typedText" placeholder="Start typing here..." rows="6" disabled></textarea>
+    <div id="timer">Time: 0.00s</div>
+    <div id="result"></div>
+    <button id="restartBtn">Restart</button>
+  </div>
+</main>
+
+<footer>
+  &copy; 2025 [juhyeonzz]. All Rights Reserved.
+</footer>
+
+<script>
+const textToType = document.getElementById('textToType');
+const startBtn = document.getElementById('startBtn');
+const displayText = document.getElementById('displayText');
+const typedText = document.getElementById('typedText');
+const result = document.getElementById('result');
+const gameArea = document.getElementById('gameArea');
+const restartBtn = document.getElementById('restartBtn');
+const timerEl = document.getElementById('timer');
+
+let startTime, endTime, timerInterval;
+let targetText = "";
+
+// Update live timer
+function updateTimer() {
+  const now = new Date().getTime();
+  const elapsed = ((now - startTime)/1000).toFixed(2);
+  timerEl.textContent = `Time: ${elapsed}s`;
+}
+
+// Highlight errors in real-time
+function highlightErrors(input, target) {
+  if (!target.startsWith(input)) {
+    typedText.style.borderColor = "#ff0000"; // red if wrong
+  } else {
+    typedText.style.borderColor = "#ff6f61"; // pink if correct so far
+  }
+}
+
+// Start game
+startBtn.addEventListener('click', () => {
+  targetText = textToType.value.replace(/\r\n/g,"\n"); // normalize line breaks
+  if(!targetText) { alert("Please enter the text to type!"); return; }
+
+  displayText.textContent = targetText;
+  typedText.value = "";
+  typedText.disabled = false;
+  typedText.focus();
+  gameArea.style.display = 'block';
+  result.textContent = "";
+  timerEl.textContent = "Time: 0.00s";
+
+  startTime = new Date().getTime();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(updateTimer, 50);
+});
+
+// Detect input
+typedText.addEventListener('input', () => {
+  const typedValue = typedText.value.replace(/\r\n/g,"\n");
+
+  // Highlight mistakes
+  highlightErrors(typedValue, targetText);
+
+  // Check if finished
+  if (typedValue === targetText) {
+    endTime = new Date().getTime();
+    clearInterval(timerInterval);
+    typedText.disabled = true;
+    const timeTaken = ((endTime - startTime)/1000).toFixed(2);
+    timerEl.textContent = `Time: ${timeTaken}s`;
+    result.textContent = `🎉 Congratulations! You finished in ${timeTaken} seconds.`;
+  }
+});
+
+// Restart game
+restartBtn.addEventListener('click', () => {
+  typedText.value = "";
+  typedText.disabled = false;
+  typedText.focus();
+  result.textContent = "";
+  timerEl.textContent = "Time: 0.00s";
+  clearInterval(timerInterval);
+  startTime = new Date().getTime();
+});
+</script>
+
+</body>
+</html>
