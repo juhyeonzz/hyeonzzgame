@@ -6,53 +6,55 @@
 <title>Falling Typing Game</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap" rel="stylesheet">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; font-family:'Baloo 2', cursive; }
-body { background:#fef7f0; color:#333; scroll-behavior:smooth; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family: 'Baloo 2', cursive; }
+  body { background: #fef7f0; color:#333; scroll-behavior: smooth; }
 
-header {
-  position: fixed; top:0; left:0; width:100%; background:#ff9cb5;
-  padding:15px 30px; display:flex; justify-content:space-between; align-items:center;
-  z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1);
-}
-header h1 { color:white; font-size:1.8rem; }
-nav a { color:white; margin-left:20px; text-decoration:none; font-weight:bold; transition:0.3s; }
-nav a:hover { color:#fff0e5; }
+  header {
+    position: fixed; top:0; left:0; width:100%; background:#ff9cb5;
+    padding:15px 30px; display:flex; justify-content:space-between; align-items:center;
+    z-index:1000; box-shadow:0 4px 6px rgba(0,0,0,0.1);
+  }
+  header h1 { color:white; font-size:1.8rem; }
+  nav a { color:white; margin-left:20px; text-decoration:none; font-weight:bold; transition:0.3s; }
+  nav a:hover { color:#fff0e5; }
 
-h1.page-title { text-align:center; margin-top:100px; color:#FF9CB5; font-size:2.5rem; }
+  h1.page-title { text-align:center; margin-top:100px; color:#FF9CB5; font-size:2.5rem; }
 
-#gameArea {
-  position:relative; width:90%; max-width:900px; height:70vh; background:#fff; overflow:hidden;
-  border-top:3px solid #FF9CB5; border-bottom:3px solid #FF9CB5; margin:50px auto 0; border-radius:15px;
-}
-.fallingItem {
-  position:absolute; width:100px; height:100px; border-radius:10px; object-fit:cover;
-  border:2px solid #FF9CB5; background:#fff; transition:transform 0.2s;
-}
+  #gameArea {
+    position:relative; width:100%; height:70vh; background:#fff; overflow:hidden;
+    border-top:3px solid #FF9CB5; border-bottom:3px solid #FF9CB5; margin:50px auto 0; border-radius:15px;
+  }
+  .fallingItem {
+    position:absolute;
+    max-width:100px; /* max width of the image */
+    height:100px; /* fixed height */
+    width:auto; /* keep aspect ratio */
+    border-radius:10px;
+    object-fit:contain; /* prevent cropping */
+    border:2px solid #FF9CB5;
+    background:#fff;
+  }
 
-#controls { text-align:center; margin-top:20px; }
-#typedInput {
-  width:300px; padding:12px; font-size:18px;
-  border:2px solid #FF9CB5; border-radius:5px; outline:none;
-}
+  #controls { text-align:center; margin-top:20px; }
+  #typedInput {
+    width:300px; padding:12px; font-size:18px;
+    border:2px solid #FF9CB5; border-radius:5px; outline:none;
+  }
 
-#stats { text-align:center; margin-top:15px; font-size:20px; color:#FF9CB5; font-weight:bold; }
+  #stats { text-align:center; margin-top:15px; font-size:20px; color:#FF9CB5; font-weight:bold; }
 
-#gameOver {
-  display:none; position:absolute; top:30%; width:100%; text-align:center; color:#FF9CB5;
-  font-size:38px; font-weight:bold;
-}
-#restartBtn {
-  margin-top:20px; padding:12px 25px; background:#FF9CB5; color:#fff; border:none; border-radius:10px;
-  cursor:pointer; font-size:20px;
-}
+  #gameOver {
+    display:none; position:absolute; top:30%; width:100%; text-align:center; color:#FF9CB5;
+    font-size:38px; font-weight:bold;
+  }
+  #restartBtn {
+    margin-top:20px; padding:12px 25px; background:#FF9CB5; color:#fff; border:none; border-radius:10px;
+    cursor:pointer; font-size:20px;
+  }
 
-.fade-in { opacity:0; transform: translateY(30px); transition: transform 0.5s ease, opacity 0.5s ease; }
-.fade-in.visible { opacity:1; transform: translateY(0); }
+  .fade-in { opacity:0; transform: translateY(30px); transition: transform 0.5s ease, opacity 0.5s ease; }
+  .fade-in.visible { opacity:1; transform: translateY(0); }
 
-@media(max-width:500px){
-  .fallingItem { width:70px; height:70px; }
-  #typedInput { width:90%; }
-}
 </style>
 </head>
 <body>
@@ -87,7 +89,7 @@ h1.page-title { text-align:center; margin-top:100px; color:#FF9CB5; font-size:2.
 </section>
 
 <script>
-const itemsData = [
+const items = [
   {img:"1.png", name:"Seoyeon"},{img:"2.png", name:"Hyerin"},{img:"3.png", name:"Jiwoo"},
   {img:"4.png", name:"Chaeyeon"},{img:"5.png", name:"Yooyeon"},{img:"6.png", name:"Soomin"},
   {img:"7.png", name:"Nakyoung"},{img:"8.png", name:"Yubin"},{img:"9.png", name:"Kaede"},
@@ -98,15 +100,8 @@ const itemsData = [
   {img:"22.png", name:"Sullin"},{img:"23.png", name:"Seoah"},{img:"24.png", name:"Jiyeon"}
 ];
 
-// Preload images
-const images = itemsData.map(item => { 
-  const img = new Image(); 
-  img.src = item.img; 
-  return img; 
-});
-
-let activeItem = null, fallTimer = null, speed = 1.7, score = 0, lives = 5, level = 1, levelCount = 0;
-const levelImages = [8,10,24];
+let active=null, fallTimer=null, speed=1.7, score=0, lives=3, level=1, levelCount=0;
+const levelImages = [8,10,24]; // images per level
 const gameArea=document.getElementById("gameArea");
 const input=document.getElementById("typedInput");
 const scoreEl=document.getElementById("score");
@@ -114,77 +109,85 @@ const livesEl=document.getElementById("lives");
 const levelEl=document.getElementById("levelNum");
 const gameOverScreen=document.getElementById("gameOver");
 
-function updateUI(){
-  scoreEl.textContent=score;
-  livesEl.textContent=lives;
-  levelEl.textContent=level;
+function updateUI() {
+    scoreEl.textContent=score;
+    livesEl.textContent=lives;
+    levelEl.textContent=level;
 }
 
-function startGame(){
-  gameOverScreen.style.display="none";
-  score = 0; lives = 5; speed = 1.7; level = 1; levelCount = 0;
-  input.value=""; input.focus();
-  updateUI();
-  spawnItem();
+function startGame() {
+    gameOverScreen.style.display="none";
+    score = 0;
+    lives = 5;
+    speed = 1.7;
+    level = 1;
+    levelCount = 0;
+    input.value = ""; 
+    input.focus();
+    updateUI();
+    spawnItem();
 }
 
-function spawnItem(){
-  if(activeItem) { activeItem.remove(); clearInterval(fallTimer); }
-  const random = itemsData[Math.floor(Math.random()*itemsData.length)];
-  activeItem = document.createElement("img");
-  activeItem.src = random.img;
-  activeItem.dataset.answer = random.name.toLowerCase();
-  activeItem.className="fallingItem";
-  activeItem.style.left = Math.random() * (gameArea.clientWidth - 100) + "px";
-  activeItem.style.top = "0px";
-  gameArea.appendChild(activeItem);
-  fallDown();
+function spawnItem() {
+    if(active) active.remove();
+    const random=items[Math.floor(Math.random()*items.length)];
+    active=document.createElement("img");
+    active.src=random.img;
+    active.dataset.answer=random.name.toLowerCase();
+    active.className="fallingItem";
+    active.style.left=Math.random()*(window.innerWidth-120)+"px";
+    active.style.top="0px";
+    gameArea.appendChild(active);
+    fallDown();
 }
 
-function fallDown(){
-  fallTimer = setInterval(()=>{
-    let y = parseFloat(activeItem.style.top);
-    activeItem.style.top = (y + speed) + "px";
-    if(y > gameArea.clientHeight - 100){
-      clearInterval(fallTimer);
-      lives--; updateUI();
-      if(lives<=0) endGame();
-      else nextLevelOrSpawn();
-    }
-  },20);
+function fallDown() {
+    fallTimer=setInterval(()=>{
+        let y=parseFloat(active.style.top);
+        active.style.top=(y+speed)+"px";
+        if(y>gameArea.offsetHeight-100){ // adjust to container
+            clearInterval(fallTimer);
+            lives--; updateUI();
+            if(lives<=0){ endGame(); }
+            else{ nextLevelOrSpawn(); }
+        }
+    },20);
 }
 
 input.addEventListener("input", ()=>{
-  if(!activeItem) return;
-  if(input.value.trim().toLowerCase() === activeItem.dataset.answer){
-    clearInterval(fallTimer);
-    activeItem.remove();
-    score++; levelCount++; speed += 0.25;
-    input.value="";
-    updateUI();
-    nextLevelOrSpawn();
-  }
+    if(!active) return;
+    let answer=active.dataset.answer;
+    if(input.value.trim().toLowerCase()===answer){
+        clearInterval(fallTimer);
+        active.remove();
+        score++;
+        levelCount++;
+        speed += 0.25; 
+        input.value=""; 
+        updateUI();
+        nextLevelOrSpawn();
+    }
 });
 
 function nextLevelOrSpawn(){
-  if(levelCount >= levelImages[level-1]){
-    levelCount=0;
-    level++;
-    speed += 0.5;
-    if(level>3){
-      alert("🎉 You finished all levels! Score: "+score);
-      endGame();
-      return;
+    if(levelCount>=levelImages[level-1]){
+        levelCount=0;
+        level++;
+        speed += 0.5;
+        if(level>3){
+            alert("🎉 You finished all levels! Score: "+score);
+            endGame();
+            return;
+        }
     }
-  }
-  spawnItem();
+    spawnItem();
 }
 
 function endGame(){
-  clearInterval(fallTimer);
-  if(activeItem) activeItem.remove();
-  input.value="";
-  gameOverScreen.style.display="block";
+    clearInterval(fallTimer);
+    if(active) active.remove();
+    input.value = "";
+    gameOverScreen.style.display="block";
 }
 
 document.getElementById("restartBtn").addEventListener("click", startGame);
@@ -193,17 +196,18 @@ startGame();
 
 // Fade-in animation
 const faders=document.querySelectorAll('.fade-in');
-const appearOnScroll=new IntersectionObserver((entries, observer)=>{
+const appearOptions={ threshold:0.2 };
+const appearOnScroll=new IntersectionObserver(function(entries, observer){
   entries.forEach(entry=>{
     if(entry.isIntersecting){
       entry.target.classList.add('visible');
       observer.unobserve(entry.target);
     }
   });
-},{threshold:0.2});
+}, appearOptions);
 faders.forEach(fader=>appearOnScroll.observe(fader));
+
 </script>
 
 </body>
 </html>
-
