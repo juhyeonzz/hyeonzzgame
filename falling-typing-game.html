@@ -21,18 +21,19 @@
   h1.page-title { text-align:center; margin-top:100px; color:#FF9CB5; font-size:2.5rem; }
 
   #gameArea {
-    position:relative; width:100%; height:70vh; background:#fff; overflow:hidden;
+    position:relative; width:100%; max-width:800px; height:70vh; background:#fff; overflow:hidden;
     border-top:3px solid #FF9CB5; border-bottom:3px solid #FF9CB5; margin:50px auto 0; border-radius:15px;
   }
   .fallingItem {
     position:absolute;
-    max-width:100px; /* max width of the image */
-    height:100px; /* fixed height */
-    width:auto; /* keep aspect ratio */
+    width:100px; 
+    height:auto;
+    max-height:100px; 
     border-radius:10px;
-    object-fit:contain; /* prevent cropping */
+    object-fit:contain;
     border:2px solid #FF9CB5;
     background:#fff;
+    transition: width 0.2s, height 0.2s;
   }
 
   #controls { text-align:center; margin-top:20px; }
@@ -55,6 +56,11 @@
   .fade-in { opacity:0; transform: translateY(30px); transition: transform 0.5s ease, opacity 0.5s ease; }
   .fade-in.visible { opacity:1; transform: translateY(0); }
 
+  /* Responsive adjustments for mobile */
+  @media (max-width:600px) {
+    .fallingItem { width:70px; max-height:70px; }
+    #typedInput { width:90%; font-size:16px; }
+  }
 </style>
 </head>
 <body>
@@ -101,7 +107,7 @@ const items = [
 ];
 
 let active=null, fallTimer=null, speed=1.7, score=0, lives=3, level=1, levelCount=0;
-const levelImages = [8,10,24]; // images per level
+const levelImages = [8,10,24];
 const gameArea=document.getElementById("gameArea");
 const input=document.getElementById("typedInput");
 const scoreEl=document.getElementById("score");
@@ -135,7 +141,7 @@ function spawnItem() {
     active.src=random.img;
     active.dataset.answer=random.name.toLowerCase();
     active.className="fallingItem";
-    active.style.left=Math.random()*(window.innerWidth-120)+"px";
+    active.style.left=Math.random()*(gameArea.offsetWidth-100)+"px";
     active.style.top="0px";
     gameArea.appendChild(active);
     fallDown();
@@ -145,7 +151,7 @@ function fallDown() {
     fallTimer=setInterval(()=>{
         let y=parseFloat(active.style.top);
         active.style.top=(y+speed)+"px";
-        if(y>gameArea.offsetHeight-100){ // adjust to container
+        if(y>gameArea.offsetHeight-100){
             clearInterval(fallTimer);
             lives--; updateUI();
             if(lives<=0){ endGame(); }
@@ -206,7 +212,6 @@ const appearOnScroll=new IntersectionObserver(function(entries, observer){
   });
 }, appearOptions);
 faders.forEach(fader=>appearOnScroll.observe(fader));
-
 </script>
 
 </body>
